@@ -1,0 +1,1824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stock Analysis Tool</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Cormorant+Garamond:wght@300;400;500;600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e17;
+    --surface: #111827;
+    --surface2: #1a2234;
+    --border: #1e2d45;
+    --accent: #00d4aa;
+    --accent2: #3b82f6;
+    --danger: #ef4444;
+    --warn: #f59e0b;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --gold: #d4a853;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: 
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 40px 40px;
+    opacity: 0.3;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Header */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 32px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 26px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    color: var(--text);
+  }
+
+  .logo span {
+    color: var(--accent);
+  }
+
+  .tagline {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .live-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+  }
+
+  .live-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(1.3); }
+  }
+
+  /* Search bar */
+  .search-section {
+    margin-bottom: 28px;
+  }
+
+  .search-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .search-box {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    gap: 12px;
+    transition: border-color 0.2s;
+  }
+
+  .search-box:focus-within {
+    border-color: var(--accent);
+  }
+
+  .search-box input {
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 15px;
+    width: 100%;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .search-box input::placeholder {
+    color: var(--muted);
+    text-transform: none;
+    letter-spacing: 0;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+  }
+
+  .search-icon {
+    color: var(--muted);
+    font-size: 16px;
+  }
+
+  .btn {
+    padding: 12px 24px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.2s;
+    letter-spacing: 0.02em;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #0a0e17;
+  }
+
+  .btn-primary:hover {
+    background: #00f0c0;
+    transform: translateY(-1px);
+  }
+
+  .btn-outline {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+
+  .btn-outline:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* Sample stocks */
+  .sample-stocks {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+
+  .sample-pill {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 4px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.06em;
+  }
+
+  .sample-pill:hover {
+    border-color: var(--accent2);
+    color: var(--accent2);
+  }
+
+  .sample-label {
+    font-size: 12px;
+    color: var(--muted);
+    margin-right: 4px;
+  }
+
+  /* Main dashboard grid */
+  .dashboard {
+    display: none;
+    animation: fadeIn 0.4s ease;
+  }
+
+  .dashboard.active {
+    display: block;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Stock header */
+  .stock-header {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px 28px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+
+  .stock-name-block h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 32px;
+    font-weight: 500;
+    line-height: 1.1;
+  }
+
+  .stock-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 6px;
+  }
+
+  .ticker-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    padding: 3px 10px;
+    border-radius: 4px;
+    background: rgba(0, 212, 170, 0.1);
+    border: 1px solid rgba(0, 212, 170, 0.3);
+    color: var(--accent);
+    letter-spacing: 0.08em;
+  }
+
+  .exchange-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+  }
+
+  .sector-badge {
+    font-size: 12px;
+    color: var(--muted);
+    padding: 2px 10px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+  }
+
+  .price-block {
+    text-align: right;
+  }
+
+  .current-price {
+    font-family: 'DM Mono', monospace;
+    font-size: 40px;
+    font-weight: 500;
+    line-height: 1;
+    color: var(--text);
+  }
+
+  .price-change {
+    font-family: 'DM Mono', monospace;
+    font-size: 15px;
+    margin-top: 6px;
+  }
+
+  .price-change.up { color: var(--accent); }
+  .price-change.down { color: var(--danger); }
+
+  /* Verdict card */
+  .verdict-card {
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap;
+    border: 1px solid;
+  }
+
+  .verdict-card.buy {
+    background: rgba(0, 212, 170, 0.06);
+    border-color: rgba(0, 212, 170, 0.3);
+  }
+
+  .verdict-card.hold {
+    background: rgba(245, 158, 11, 0.06);
+    border-color: rgba(245, 158, 11, 0.3);
+  }
+
+  .verdict-card.sell {
+    background: rgba(239, 68, 68, 0.06);
+    border-color: rgba(239, 68, 68, 0.3);
+  }
+
+  .verdict-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .verdict-rating {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 36px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+  }
+
+  .verdict-rating.buy { color: var(--accent); }
+  .verdict-rating.hold { color: var(--warn); }
+  .verdict-rating.sell { color: var(--danger); }
+
+  .verdict-summary {
+    flex: 1;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #94a3b8;
+    max-width: 560px;
+  }
+
+  .target-block {
+    text-align: right;
+  }
+
+  .target-label {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .target-price {
+    font-family: 'DM Mono', monospace;
+    font-size: 26px;
+    font-weight: 500;
+    color: var(--gold);
+    margin: 2px 0;
+  }
+
+  .upside {
+    font-size: 12px;
+    color: var(--accent);
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* Grid layout */
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .grid-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .grid-4 {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  /* Cards */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+  }
+
+  .card-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* Key metrics */
+  .metric-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .metric-row:last-child {
+    border-bottom: none;
+  }
+
+  .metric-label {
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .metric-value {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  .metric-value.positive { color: var(--accent); }
+  .metric-value.negative { color: var(--danger); }
+  .metric-value.neutral { color: var(--warn); }
+
+  /* Mini stat cards */
+  .mini-stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+  }
+
+  .mini-stat-label {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .mini-stat-value {
+    font-family: 'DM Mono', monospace;
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1;
+  }
+
+  .mini-stat-sub {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  /* Score bar */
+  .score-section {
+    margin-bottom: 12px;
+  }
+
+  .score-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+
+  .score-label {
+    font-size: 13px;
+    color: #94a3b8;
+    width: 120px;
+    flex-shrink: 0;
+  }
+
+  .score-bar-bg {
+    flex: 1;
+    height: 6px;
+    background: var(--surface2);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .score-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.8s ease;
+  }
+
+  .score-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    width: 30px;
+    text-align: right;
+    color: var(--text);
+  }
+
+  /* Chart area */
+  .chart-area {
+    height: 160px;
+    position: relative;
+    margin: 8px 0;
+  }
+
+  canvas {
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  /* Risk meter */
+  .risk-meter {
+    display: flex;
+    gap: 4px;
+    margin-top: 8px;
+  }
+
+  .risk-block {
+    flex: 1;
+    height: 8px;
+    border-radius: 2px;
+    background: var(--border);
+    transition: background 0.3s;
+  }
+
+  .risk-block.active-low { background: var(--accent); }
+  .risk-block.active-med { background: var(--warn); }
+  .risk-block.active-high { background: var(--danger); }
+
+  /* News feed */
+  .news-item {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .news-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  .news-headline {
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.5;
+    margin-bottom: 4px;
+  }
+
+  .news-meta {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+    display: flex;
+    gap: 12px;
+  }
+
+  .news-sentiment {
+    font-size: 10px;
+    padding: 1px 7px;
+    border-radius: 3px;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.04em;
+  }
+
+  .news-sentiment.pos { background: rgba(0,212,170,0.1); color: var(--accent); }
+  .news-sentiment.neg { background: rgba(239,68,68,0.1); color: var(--danger); }
+  .news-sentiment.neu { background: rgba(100,116,139,0.1); color: var(--muted); }
+
+  /* Analyst ratings */
+  .rating-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+
+  .rating-label-sm {
+    font-size: 12px;
+    color: var(--muted);
+    width: 50px;
+  }
+
+  .rating-bar-bg {
+    flex: 1;
+    height: 10px;
+    background: var(--surface2);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .rating-count {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--text);
+    width: 20px;
+    text-align: right;
+  }
+
+  /* Comparison table */
+  .comp-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .comp-table th {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    text-transform: uppercase;
+    text-align: left;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+  }
+
+  .comp-table td {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+  }
+
+  .comp-table tr:last-child td { border-bottom: none; }
+  .comp-table tr.highlight td { background: rgba(0,212,170,0.04); }
+  .comp-table tr.highlight td:first-child { color: var(--accent); }
+
+  /* Loading overlay */
+  .loading {
+    display: none;
+    text-align: center;
+    padding: 60px;
+  }
+
+  .loading.active { display: block; }
+
+  .spinner {
+    width: 36px;
+    height: 36px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 16px;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .loading-text {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+  }
+
+  /* Note at bottom */
+  .disclaimer {
+    text-align: center;
+    padding: 20px;
+    font-size: 11px;
+    color: var(--muted);
+    border-top: 1px solid var(--border);
+    margin-top: 24px;
+    line-height: 1.6;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr 1fr; }
+    .stock-header { flex-direction: column; }
+    .price-block { text-align: left; }
+  }
+
+  @media (max-width: 480px) {
+    .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+  }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 4px;
+    width: fit-content;
+  }
+
+  .tab {
+    padding: 7px 18px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    color: var(--muted);
+    transition: all 0.2s;
+    border: none;
+    background: none;
+  }
+
+  .tab.active {
+    background: var(--accent);
+    color: #0a0e17;
+  }
+
+  .tab:hover:not(.active) { color: var(--text); }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* Candlestick chart mock */
+  .price-chart {
+    position: relative;
+    height: 180px;
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    padding: 0 4px;
+  }
+
+  .candle-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    height: 100%;
+    position: relative;
+  }
+
+  .candle-wick {
+    width: 1px;
+    background: #475569;
+    position: absolute;
+  }
+
+  .candle-body {
+    width: 70%;
+    border-radius: 1px;
+    min-height: 3px;
+    position: absolute;
+  }
+
+  .candle-body.up { background: var(--accent); }
+  .candle-body.down { background: var(--danger); }
+
+  /* Y-axis labels */
+  .chart-y-labels {
+    position: absolute;
+    right: 0;
+    top: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .y-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    color: var(--muted);
+  }
+
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <div>
+      <div class="logo">Market<span>Lens</span></div>
+      <div class="tagline">Professional Stock Analysis Platform</div>
+    </div>
+    <div class="header-right">
+      <div class="live-badge">
+        <div class="live-dot"></div>
+        ANALYSIS ENGINE READY
+      </div>
+    </div>
+  </div>
+
+  <!-- Search -->
+  <div class="search-section">
+    <div class="search-row">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="tickerInput" placeholder="Enter stock ticker or company name (e.g. AAPL, DBS, 700.HK)" />
+      </div>
+      <button class="btn btn-primary" onclick="analyzeStock()">Analyse</button>
+      <button class="btn btn-outline" onclick="clearDashboard()">Clear</button>
+    </div>
+    <div class="sample-stocks">
+      <span class="sample-label">Try:</span>
+      <span class="sample-pill" onclick="quickLoad('AAPL')">AAPL</span>
+      <span class="sample-pill" onclick="quickLoad('MSFT')">MSFT</span>
+      <span class="sample-pill" onclick="quickLoad('NVDA')">NVDA</span>
+      <span class="sample-pill" onclick="quickLoad('DBS')">DBS</span>
+      <span class="sample-pill" onclick="quickLoad('TSLA')">TSLA</span>
+      <span class="sample-pill" onclick="quickLoad('700.HK')">700.HK</span>
+      <span class="sample-pill" onclick="quickLoad('GOOGL')">GOOGL</span>
+      <span class="sample-pill" onclick="quickLoad('META')">META</span>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    <div class="loading-text">RUNNING ANALYSIS...</div>
+  </div>
+
+  <!-- Dashboard -->
+  <div class="dashboard" id="dashboard">
+
+    <!-- Stock Header -->
+    <div class="stock-header">
+      <div class="stock-name-block">
+        <h1 id="stockName">—</h1>
+        <div class="stock-meta">
+          <span class="ticker-badge" id="stockTicker">—</span>
+          <span class="exchange-badge" id="stockExchange">—</span>
+          <span class="sector-badge" id="stockSector">—</span>
+        </div>
+      </div>
+      <div class="price-block">
+        <div class="current-price" id="currentPrice">—</div>
+        <div class="price-change" id="priceChange">—</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px;font-family:'DM Mono',monospace;" id="priceRange">52W: — / —</div>
+      </div>
+    </div>
+
+    <!-- Verdict -->
+    <div class="verdict-card" id="verdictCard">
+      <div>
+        <div class="verdict-label">Investment Verdict</div>
+        <div class="verdict-rating" id="verdictRating">—</div>
+      </div>
+      <div class="verdict-summary" id="verdictSummary">—</div>
+      <div class="target-block">
+        <div class="target-label">12M Price Target</div>
+        <div class="target-price" id="targetPrice">—</div>
+        <div class="upside" id="upsideText">—</div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('overview')">Overview</button>
+      <button class="tab" onclick="switchTab('financials')">Financials</button>
+      <button class="tab" onclick="switchTab('valuation')">Valuation</button>
+      <button class="tab" onclick="switchTab('sentiment')">Sentiment</button>
+    </div>
+
+    <!-- OVERVIEW TAB -->
+    <div class="tab-content active" id="tab-overview">
+      
+      <!-- 4 key stats -->
+      <div class="grid-4" id="keyStats">
+        <div class="mini-stat">
+          <div class="mini-stat-label">Market Cap</div>
+          <div class="mini-stat-value" id="mktCap">—</div>
+          <div class="mini-stat-sub" id="mktCapSub">—</div>
+        </div>
+        <div class="mini-stat">
+          <div class="mini-stat-label">P/E Ratio</div>
+          <div class="mini-stat-value" id="peRatio">—</div>
+          <div class="mini-stat-sub" id="peSub">vs sector avg</div>
+        </div>
+        <div class="mini-stat">
+          <div class="mini-stat-label">Dividend Yield</div>
+          <div class="mini-stat-value" id="divYield">—</div>
+          <div class="mini-stat-sub" id="divSub">—</div>
+        </div>
+        <div class="mini-stat">
+          <div class="mini-stat-label">Beta</div>
+          <div class="mini-stat-value" id="betaVal">—</div>
+          <div class="mini-stat-sub" id="betaSub">—</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <!-- Price Chart -->
+        <div class="card">
+          <div class="card-title">Price Action (6M)</div>
+          <div class="price-chart" id="priceChart"></div>
+        </div>
+
+        <!-- Scoring -->
+        <div class="card">
+          <div class="card-title">Factor Scores</div>
+          <div class="score-section" id="factorScores">
+            <!-- filled by JS -->
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <!-- Risk Assessment -->
+        <div class="card">
+          <div class="card-title">Risk Assessment</div>
+          <div id="riskContent"></div>
+        </div>
+
+        <!-- Key Catalysts -->
+        <div class="card">
+          <div class="card-title">Key Catalysts</div>
+          <div id="catalystsContent"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- FINANCIALS TAB -->
+    <div class="tab-content" id="tab-financials">
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Income Statement Highlights</div>
+          <div id="incomeContent"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Balance Sheet Snapshot</div>
+          <div id="balanceContent"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Growth Metrics (YoY)</div>
+        <div id="growthContent" style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;"></div>
+      </div>
+    </div>
+
+    <!-- VALUATION TAB -->
+    <div class="tab-content" id="tab-valuation">
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Valuation Multiples</div>
+          <div id="multiples"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Peer Comparison</div>
+          <div style="overflow-x:auto;">
+            <table class="comp-table" id="peerTable"></table>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">DCF Intrinsic Value Estimate</div>
+        <div id="dcfContent" style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;"></div>
+      </div>
+    </div>
+
+    <!-- SENTIMENT TAB -->
+    <div class="tab-content" id="tab-sentiment">
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Analyst Consensus</div>
+          <div id="analystContent"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Recent News Flow</div>
+          <div id="newsContent"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Technical Indicators</div>
+        <div id="technicalContent" style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="disclaimer">
+    ⚠️ MarketLens is an educational analysis tool for professional reference only. All data shown is illustrative and does not constitute investment advice.<br>
+    Always conduct independent research and verify figures from primary sources before making investment decisions.
+  </div>
+
+</div>
+
+<script>
+// Stock database with simulated data
+const stockDB = {
+  'AAPL': {
+    name: 'Apple Inc.', exchange: 'NASDAQ', sector: 'Technology', currency: 'USD',
+    price: 213.49, change: +1.84, changePct: +0.87,
+    week52H: 237.23, week52L: 164.08,
+    mktCap: '3.27T', mktCapSub: 'Mega Cap',
+    pe: 33.2, peSub: 'Sect avg: 28.4',
+    divYield: '0.48%', divSub: '$0.25/qtr',
+    beta: 1.24, betaSub: 'Moderate volatility',
+    verdict: 'BUY', verdictClass: 'buy',
+    summary: 'Apple remains a fortress business with exceptional cash generation, dominant ecosystem lock-in, and expanding services segment growing at 14% YoY. AI integration via Apple Intelligence is an underappreciated catalyst. Valuation premium is justified given quality of earnings.',
+    targetPrice: '$245.00', upside: '+14.7% upside',
+    factors: [
+      { label: 'Business Quality', score: 9.2, color: '#00d4aa' },
+      { label: 'Growth Outlook', score: 7.4, color: '#00d4aa' },
+      { label: 'Valuation', score: 5.8, color: '#f59e0b' },
+      { label: 'Financial Health', score: 9.5, color: '#00d4aa' },
+      { label: 'Market Position', score: 9.8, color: '#00d4aa' },
+    ],
+    riskLevel: 2, riskLabel: 'LOW-MEDIUM RISK',
+    risks: ['Regulatory pressure in EU on App Store fees', 'China revenue exposure (~18% of total)', 'Premium pricing sensitivity in weak macro'],
+    catalysts: ['Apple Intelligence / AI supercycle upgrade cycle', 'Services segment margin expansion', 'India market penetration acceleration', 'Share buyback programme ($110B authorised)'],
+    revenue: '$391.0B', revenueGrowth: '+2.0%', grossMargin: '46.2%', netMargin: '25.3%',
+    eps: '$6.43', epsGrowth: '+10.2%', fcf: '$102B', roe: '160%',
+    cashDebt: 'Net Cash: $54B', currentRatio: '1.07', debtEquity: '1.87x', interestCov: '30x',
+    revGrowth: '+2.0%', ebitdaGrowth: '+8.3%', epsGrowthM: '+10.2%', fcfGrowth: '+12.1%',
+    multiples: [
+      { label: 'P/E (TTM)', value: '33.2x', vs: 'Sect: 28.4x', flag: 'neutral' },
+      { label: 'Forward P/E', value: '29.8x', vs: 'Sect: 25.1x', flag: 'neutral' },
+      { label: 'EV/EBITDA', value: '22.1x', vs: 'Sect: 18.3x', flag: 'neutral' },
+      { label: 'P/FCF', value: '31.5x', vs: 'Sect: 26.0x', flag: 'neutral' },
+      { label: 'P/S', value: '8.4x', vs: 'Sect: 5.6x', flag: 'negative' },
+      { label: 'PEG Ratio', value: '2.8x', vs: '< 1 = cheap', flag: 'neutral' },
+    ],
+    peers: [
+      { ticker: 'AAPL*', pe: '33.2', ps: '8.4', divYield: '0.5%', growth: '+10%', verdict: 'BUY' },
+      { ticker: 'MSFT', pe: '36.1', ps: '12.8', divYield: '0.7%', growth: '+16%', verdict: 'BUY' },
+      { ticker: 'GOOGL', pe: '22.4', ps: '6.5', divYield: '0.5%', growth: '+15%', verdict: 'BUY' },
+      { ticker: 'META', pe: '25.3', ps: '8.7', divYield: '0.4%', growth: '+19%', verdict: 'BUY' },
+    ],
+    dcf: [
+      { label: 'Bear Case', value: '$178', sub: 'Low growth scenario' },
+      { label: 'Base Case', value: '$245', sub: 'Consensus estimates' },
+      { label: 'Bull Case', value: '$310', sub: 'AI upcycle scenario' },
+    ],
+    analystBuy: 28, analystHold: 9, analystSell: 2,
+    avgTarget: '$234.50', highTarget: '$275.00', lowTarget: '$160.00',
+    news: [
+      { headline: 'Apple reports strong Q2 earnings, EPS beats by 4%; Services hits record $26.6B revenue', time: '2 days ago', sentiment: 'pos' },
+      { headline: 'Apple Intelligence expansion to new markets seen as key revenue catalyst for FY2025', time: '5 days ago', sentiment: 'pos' },
+      { headline: 'EU Digital Markets Act compliance costs could weigh on App Store margins through 2026', time: '1 week ago', sentiment: 'neg' },
+      { headline: 'Berkshire Hathaway maintains Apple as largest holding despite partial trim', time: '2 weeks ago', sentiment: 'neu' },
+    ],
+    technicals: [
+      { label: 'RSI (14)', value: '58.4', signal: 'Neutral', signalClass: 'neutral' },
+      { label: 'MACD', value: 'Bullish Cross', signal: 'Buy', signalClass: 'positive' },
+      { label: '50D MA', value: '$207.30', signal: 'Above', signalClass: 'positive' },
+      { label: '200D MA', value: '$195.40', signal: 'Above', signalClass: 'positive' },
+    ],
+  },
+  'NVDA': {
+    name: 'NVIDIA Corporation', exchange: 'NASDAQ', sector: 'Semiconductors', currency: 'USD',
+    price: 131.38, change: +2.95, changePct: +2.30,
+    week52H: 153.13, week52L: 75.61,
+    mktCap: '3.21T', mktCapSub: 'Mega Cap',
+    pe: 48.2, peSub: 'Sect avg: 28.4',
+    divYield: '0.03%', divSub: '$0.01/qtr',
+    beta: 1.68, betaSub: 'High volatility',
+    verdict: 'BUY', verdictClass: 'buy',
+    summary: 'NVIDIA\'s data centre dominance via Hopper/Blackwell GPU architecture is unrivalled. AI infrastructure spend is in a multi-year supercycle and NVIDIA commands ~80% market share in AI training chips. Near-term Blackwell ramp risk is well understood; long-term demand far exceeds supply.',
+    targetPrice: '$160.00', upside: '+21.8% upside',
+    factors: [
+      { label: 'Business Quality', score: 9.6, color: '#00d4aa' },
+      { label: 'Growth Outlook', score: 9.8, color: '#00d4aa' },
+      { label: 'Valuation', score: 5.0, color: '#f59e0b' },
+      { label: 'Financial Health', score: 9.1, color: '#00d4aa' },
+      { label: 'Market Position', score: 9.9, color: '#00d4aa' },
+    ],
+    riskLevel: 3, riskLabel: 'MEDIUM-HIGH RISK',
+    risks: ['Rich valuation leaves little margin of safety', 'Export restrictions on China sales', 'AMD/Intel competition intensifying', 'Customer concentration (hyperscalers ~40% revenue)'],
+    catalysts: ['Blackwell GPU ramp in H2 2025', 'Sovereign AI spend (Middle East, Asia)', 'CUDA ecosystem moat widening', 'Autonomous driving / robotics segment'],
+    revenue: '$130.5B', revenueGrowth: '+114%', grossMargin: '75.0%', netMargin: '55.0%',
+    eps: '$2.72', epsGrowth: '+145%', fcf: '$67B', roe: '124%',
+    cashDebt: 'Net Cash: $26B', currentRatio: '4.17', debtEquity: '0.44x', interestCov: '85x',
+    revGrowth: '+114%', ebitdaGrowth: '+180%', epsGrowthM: '+145%', fcfGrowth: '+210%',
+    multiples: [
+      { label: 'P/E (TTM)', value: '48.2x', vs: 'Sect: 28.4x', flag: 'negative' },
+      { label: 'Forward P/E', value: '30.1x', vs: 'Sect: 25.1x', flag: 'neutral' },
+      { label: 'EV/EBITDA', value: '35.2x', vs: 'Sect: 18.3x', flag: 'negative' },
+      { label: 'P/FCF', value: '47.5x', vs: 'Sect: 26.0x', flag: 'negative' },
+      { label: 'P/S', value: '24.0x', vs: 'Sect: 5.6x', flag: 'negative' },
+      { label: 'PEG Ratio', value: '0.33x', vs: '< 1 = cheap', flag: 'positive' },
+    ],
+    peers: [
+      { ticker: 'NVDA*', pe: '48.2', ps: '24.0', divYield: '0.0%', growth: '+145%', verdict: 'BUY' },
+      { ticker: 'AMD', pe: '105', ps: '7.8', divYield: '0.0%', growth: '+24%', verdict: 'HOLD' },
+      { ticker: 'INTC', pe: 'N/A', ps: '1.2', divYield: '0.0%', growth: '-8%', verdict: 'SELL' },
+      { ticker: 'AVGO', pe: '35.1', ps: '14.2', divYield: '1.1%', growth: '+51%', verdict: 'BUY' },
+    ],
+    dcf: [
+      { label: 'Bear Case', value: '$90', sub: 'AI spend normalises' },
+      { label: 'Base Case', value: '$160', sub: 'Continued dominance' },
+      { label: 'Bull Case', value: '$240', sub: 'AGI infrastructure play' },
+    ],
+    analystBuy: 38, analystHold: 5, analystSell: 0,
+    avgTarget: '$155.20', highTarget: '$220.00', lowTarget: '$100.00',
+    news: [
+      { headline: 'NVIDIA Blackwell shipments accelerating — hyperscalers signal further capex increases', time: '1 day ago', sentiment: 'pos' },
+      { headline: 'Jensen Huang announces NVLink Fusion at Computex, extending CUDA ecosystem dominance', time: '3 days ago', sentiment: 'pos' },
+      { headline: 'US tightens export controls on H20 chips to China, NVDA guides for $5.5B charge', time: '1 week ago', sentiment: 'neg' },
+      { headline: 'Saudi Arabia signs $600B AI investment deal; NVIDIA positioned as key beneficiary', time: '2 weeks ago', sentiment: 'pos' },
+    ],
+    technicals: [
+      { label: 'RSI (14)', value: '61.2', signal: 'Neutral', signalClass: 'neutral' },
+      { label: 'MACD', value: 'Bullish', signal: 'Buy', signalClass: 'positive' },
+      { label: '50D MA', value: '$118.40', signal: 'Above', signalClass: 'positive' },
+      { label: '200D MA', value: '$110.20', signal: 'Above', signalClass: 'positive' },
+    ],
+  },
+  'MSFT': {
+    name: 'Microsoft Corporation', exchange: 'NASDAQ', sector: 'Technology', currency: 'USD',
+    price: 449.26, change: +3.12, changePct: +0.70,
+    week52H: 468.35, week52L: 344.79,
+    mktCap: '3.34T', mktCapSub: 'Mega Cap',
+    pe: 36.1, peSub: 'Sect avg: 28.4',
+    divYield: '0.70%', divSub: '$0.83/qtr',
+    beta: 0.90, betaSub: 'Low volatility',
+    verdict: 'BUY', verdictClass: 'buy',
+    summary: 'Microsoft\'s Azure cloud growing at 35%+ driven by AI workloads. Copilot monetisation across Office 365 adds ~$30/user/month ARPU uplift with minimal incremental cost. OpenAI partnership creates durable competitive advantage. Defensive quality makes it a core holding.',
+    targetPrice: '$510.00', upside: '+13.5% upside',
+    factors: [
+      { label: 'Business Quality', score: 9.5, color: '#00d4aa' },
+      { label: 'Growth Outlook', score: 8.6, color: '#00d4aa' },
+      { label: 'Valuation', score: 6.2, color: '#f59e0b' },
+      { label: 'Financial Health', score: 9.4, color: '#00d4aa' },
+      { label: 'Market Position', score: 9.7, color: '#00d4aa' },
+    ],
+    riskLevel: 1, riskLabel: 'LOW RISK',
+    risks: ['Elevated valuation at 36x earnings', 'Antitrust scrutiny on Activision & AI', 'Slower-than-expected Copilot upsell rate'],
+    catalysts: ['Azure AI (Copilot) monetisation ramp', 'GitHub Copilot enterprise adoption', 'Nuance healthcare AI expansion', 'OpenAI equity upside'],
+    revenue: '$245.1B', revenueGrowth: '+16%', grossMargin: '69.4%', netMargin: '35.8%',
+    eps: '$12.41', epsGrowth: '+22%', fcf: '$75B', roe: '36.2%',
+    cashDebt: 'Net Cash: $30B', currentRatio: '1.30', debtEquity: '0.35x', interestCov: '40x',
+    revGrowth: '+16%', ebitdaGrowth: '+19%', epsGrowthM: '+22%', fcfGrowth: '+18%',
+    multiples: [
+      { label: 'P/E (TTM)', value: '36.1x', vs: 'Sect: 28.4x', flag: 'neutral' },
+      { label: 'Forward P/E', value: '30.5x', vs: 'Sect: 25.1x', flag: 'neutral' },
+      { label: 'EV/EBITDA', value: '23.8x', vs: 'Sect: 18.3x', flag: 'neutral' },
+      { label: 'P/FCF', value: '42.0x', vs: 'Sect: 26.0x', flag: 'negative' },
+      { label: 'P/S', value: '12.8x', vs: 'Sect: 5.6x', flag: 'negative' },
+      { label: 'PEG Ratio', value: '1.64x', vs: '< 1 = cheap', flag: 'neutral' },
+    ],
+    peers: [
+      { ticker: 'MSFT*', pe: '36.1', ps: '12.8', divYield: '0.7%', growth: '+22%', verdict: 'BUY' },
+      { ticker: 'GOOGL', pe: '22.4', ps: '6.5', divYield: '0.5%', growth: '+15%', verdict: 'BUY' },
+      { ticker: 'ORCL', pe: '40.2', ps: '9.3', divYield: '0.9%', growth: '+14%', verdict: 'HOLD' },
+      { ticker: 'CRM', pe: '55.1', ps: '8.1', divYield: '0.0%', growth: '+9%', verdict: 'HOLD' },
+    ],
+    dcf: [
+      { label: 'Bear Case', value: '$370', sub: 'Cloud slowdown' },
+      { label: 'Base Case', value: '$510', sub: 'AI monetisation on track' },
+      { label: 'Bull Case', value: '$650', sub: 'Copilot + AGI scenario' },
+    ],
+    analystBuy: 45, analystHold: 4, analystSell: 0,
+    avgTarget: '$502.00', highTarget: '$600.00', lowTarget: '$380.00',
+    news: [
+      { headline: 'Microsoft Azure Q3 revenue grows 35% YoY; AI services now 16 points of cloud growth', time: '1 day ago', sentiment: 'pos' },
+      { headline: 'Microsoft 365 Copilot reaches 15M paid seats — ahead of analyst forecasts', time: '4 days ago', sentiment: 'pos' },
+      { headline: 'FTC scrutiny on Microsoft OpenAI partnership investment structure continues', time: '1 week ago', sentiment: 'neg' },
+      { headline: 'Microsoft raises dividend 10% — 20th consecutive annual increase', time: '2 weeks ago', sentiment: 'pos' },
+    ],
+    technicals: [
+      { label: 'RSI (14)', value: '55.8', signal: 'Neutral', signalClass: 'neutral' },
+      { label: 'MACD', value: 'Bullish', signal: 'Buy', signalClass: 'positive' },
+      { label: '50D MA', value: '$435.20', signal: 'Above', signalClass: 'positive' },
+      { label: '200D MA', value: '$410.80', signal: 'Above', signalClass: 'positive' },
+    ],
+  },
+  'DBS': {
+    name: 'DBS Group Holdings Ltd', exchange: 'SGX', sector: 'Banking', currency: 'SGD',
+    price: 42.15, change: +0.28, changePct: +0.67,
+    week52H: 44.61, week52L: 30.52,
+    mktCap: 'S$120.6B', mktCapSub: 'Large Cap',
+    pe: 11.8, peSub: 'Sect avg: 10.5x',
+    divYield: '5.90%', divSub: 'S$0.60/qtr (special incl.)',
+    beta: 0.78, betaSub: 'Defensive',
+    verdict: 'BUY', verdictClass: 'buy',
+    summary: 'DBS is Asia\'s leading digital bank with best-in-class ROE above 18%. With rate cuts likely gradual, NIMs remain resilient. Strong capital position (CET1 16.5%) supports generous capital return via dividends + buybacks. Wealth management & treasury income diversify beyond interest income.',
+    targetPrice: 'S$48.00', upside: '+13.9% upside',
+    factors: [
+      { label: 'Business Quality', score: 9.0, color: '#00d4aa' },
+      { label: 'Growth Outlook', score: 7.0, color: '#00d4aa' },
+      { label: 'Valuation', score: 7.5, color: '#00d4aa' },
+      { label: 'Financial Health', score: 8.8, color: '#00d4aa' },
+      { label: 'Market Position', score: 9.2, color: '#00d4aa' },
+    ],
+    riskLevel: 1, riskLabel: 'LOW RISK',
+    risks: ['Rate cut cycle compressing NIMs', 'Greater China credit exposure', 'Regulatory capital requirements tightening'],
+    catalysts: ['Special dividend continuation', 'Wealth management AUM growth in Asia', 'Digital bank CASA growth', 'Share buyback programme'],
+    revenue: 'S$22.6B', revenueGrowth: '+10%', grossMargin: '—', netMargin: '41.2%',
+    eps: 'S$3.57', epsGrowth: '+9.5%', fcf: '—', roe: '18.5%',
+    cashDebt: 'CET1: 16.5%', currentRatio: '—', debtEquity: 'N/A (Bank)', interestCov: 'N/A',
+    revGrowth: '+10%', ebitdaGrowth: '+8%', epsGrowthM: '+9.5%', fcfGrowth: '—',
+    multiples: [
+      { label: 'P/E (TTM)', value: '11.8x', vs: 'Sect: 10.5x', flag: 'neutral' },
+      { label: 'P/BV', value: '1.85x', vs: 'Sect: 1.20x', flag: 'neutral' },
+      { label: 'Div Yield', value: '5.9%', vs: 'SGX avg: 3.5%', flag: 'positive' },
+      { label: 'ROE', value: '18.5%', vs: 'Sect: 13%', flag: 'positive' },
+      { label: 'Cost-Income', value: '39.2%', vs: 'Peers: 45%', flag: 'positive' },
+      { label: 'NIM', value: '2.13%', vs: 'Prior: 2.23%', flag: 'neutral' },
+    ],
+    peers: [
+      { ticker: 'DBS*', pe: '11.8', ps: '—', divYield: '5.9%', growth: '+9.5%', verdict: 'BUY' },
+      { ticker: 'OCBC', pe: '10.2', ps: '—', divYield: '5.1%', growth: '+6%', verdict: 'BUY' },
+      { ticker: 'UOB', pe: '9.8', ps: '—', divYield: '5.4%', growth: '+5%', verdict: 'HOLD' },
+    ],
+    dcf: [
+      { label: 'Bear Case', value: 'S$36', sub: 'Rates fall sharply' },
+      { label: 'Base Case', value: 'S$48', sub: 'Gradual rate normalisation' },
+      { label: 'Bull Case', value: 'S$56', sub: 'Higher-for-longer rates' },
+    ],
+    analystBuy: 14, analystHold: 3, analystSell: 0,
+    avgTarget: 'S$46.80', highTarget: 'S$52.00', lowTarget: 'S$38.00',
+    news: [
+      { headline: 'DBS declares special dividend, total FY payout rises to S$2.40/share — highest ever', time: '3 days ago', sentiment: 'pos' },
+      { headline: 'DBS Q1 net profit rises 6% to S$2.95B despite NIM compression', time: '1 week ago', sentiment: 'pos' },
+      { headline: 'DBS wealth management AUM crosses S$390B — record high amid Asia wealth boom', time: '2 weeks ago', sentiment: 'pos' },
+      { headline: 'MAS reviews dividend cap guidance — market expects return to uncapped payouts', time: '3 weeks ago', sentiment: 'pos' },
+    ],
+    technicals: [
+      { label: 'RSI (14)', value: '54.2', signal: 'Neutral', signalClass: 'neutral' },
+      { label: 'MACD', value: 'Neutral', signal: 'Hold', signalClass: 'neutral' },
+      { label: '50D MA', value: 'S$40.80', signal: 'Above', signalClass: 'positive' },
+      { label: '200D MA', value: 'S$37.60', signal: 'Above', signalClass: 'positive' },
+    ],
+  },
+  'TSLA': {
+    name: 'Tesla Inc.', exchange: 'NASDAQ', sector: 'Automotive / EV', currency: 'USD',
+    price: 338.74, change: -8.42, changePct: -2.43,
+    week52H: 479.97, week52L: 138.80,
+    mktCap: '$1.09T', mktCapSub: 'Mega Cap',
+    pe: 178.3, peSub: 'Sect avg: 12x',
+    divYield: '0.00%', divSub: 'No dividend',
+    beta: 2.31, betaSub: 'Very high volatility',
+    verdict: 'HOLD', verdictClass: 'hold',
+    summary: 'Tesla\'s core auto business faces margin pressure from price cuts and rising competition. The bull case rests on autonomous driving (FSD/Cybercab) and energy storage — both high-optionality but not yet in numbers. Musk distraction risk is non-trivial. Current valuation prices in significant execution on robotaxi.',
+    targetPrice: '$350.00', upside: '+3.3% upside',
+    factors: [
+      { label: 'Business Quality', score: 6.8, color: '#f59e0b' },
+      { label: 'Growth Outlook', score: 7.5, color: '#00d4aa' },
+      { label: 'Valuation', score: 3.2, color: '#ef4444' },
+      { label: 'Financial Health', score: 7.2, color: '#00d4aa' },
+      { label: 'Market Position', score: 7.8, color: '#00d4aa' },
+    ],
+    riskLevel: 4, riskLabel: 'HIGH RISK',
+    risks: ['Valuation at 178x earnings — requires perfection', 'Musk reputational and distraction risk (DOGE, X)', 'BYD and Chinese EV competition intensifying', 'FSD regulatory approval timeline uncertain'],
+    catalysts: ['Cybercab / robotaxi commercial launch', 'FSD v13 milestone & regulatory approval', 'Energy storage Megapack record deployments', 'Optimus robot commercialisation'],
+    revenue: '$97.7B', revenueGrowth: '+1.0%', grossMargin: '17.9%', netMargin: '5.8%',
+    eps: '$1.90', epsGrowth: '-25%', fcf: '$2.4B', roe: '11.8%',
+    cashDebt: 'Net Cash: $33B', currentRatio: '1.84', debtEquity: '0.18x', interestCov: '20x',
+    revGrowth: '+1.0%', ebitdaGrowth: '-18%', epsGrowthM: '-25%', fcfGrowth: '-60%',
+    multiples: [
+      { label: 'P/E (TTM)', value: '178x', vs: 'Auto avg: 12x', flag: 'negative' },
+      { label: 'Forward P/E', value: '95x', vs: 'Auto avg: 10x', flag: 'negative' },
+      { label: 'EV/EBITDA', value: '62x', vs: 'Auto avg: 8x', flag: 'negative' },
+      { label: 'P/FCF', value: '440x', vs: 'Extremely high', flag: 'negative' },
+      { label: 'P/S', value: '11.0x', vs: 'Auto avg: 0.8x', flag: 'negative' },
+      { label: 'PEG Ratio', value: 'N/A', vs: 'Earnings declining', flag: 'neutral' },
+    ],
+    peers: [
+      { ticker: 'TSLA*', pe: '178', ps: '11.0', divYield: '0.0%', growth: '-25%', verdict: 'HOLD' },
+      { ticker: 'BYD', pe: '22', ps: '1.1', divYield: '1.0%', growth: '+34%', verdict: 'BUY' },
+      { ticker: 'F', pe: '11', ps: '0.3', divYield: '5.0%', growth: '+2%', verdict: 'HOLD' },
+      { ticker: 'GM', pe: '5', ps: '0.3', divYield: '1.2%', growth: '+5%', verdict: 'HOLD' },
+    ],
+    dcf: [
+      { label: 'Bear Case', value: '$100', sub: 'Autos only, no AV' },
+      { label: 'Base Case', value: '$350', sub: 'Moderate FSD progress' },
+      { label: 'Bull Case', value: '$800', sub: 'Full robotaxi rollout' },
+    ],
+    analystBuy: 18, analystHold: 15, analystSell: 9,
+    avgTarget: '$306.00', highTarget: '$550.00', lowTarget: '$85.00',
+    news: [
+      { headline: 'Tesla Q1 deliveries miss estimates at 336K vs 390K expected; gross margin falls to 17.9%', time: '2 days ago', sentiment: 'neg' },
+      { headline: 'Cybercab unveil event set for Q3 2025 in Austin — investors await commercial timeline', time: '4 days ago', sentiment: 'pos' },
+      { headline: 'Elon Musk signals return to Tesla focus amid DOGE wind-down', time: '1 week ago', sentiment: 'pos' },
+      { headline: 'BYD outsells Tesla globally in Q1 2025 for third consecutive quarter', time: '2 weeks ago', sentiment: 'neg' },
+    ],
+    technicals: [
+      { label: 'RSI (14)', value: '45.2', signal: 'Neutral', signalClass: 'neutral' },
+      { label: 'MACD', value: 'Bearish', signal: 'Sell', signalClass: 'negative' },
+      { label: '50D MA', value: '$355.40', signal: 'Below', signalClass: 'negative' },
+      { label: '200D MA', value: '$295.10', signal: 'Above', signalClass: 'positive' },
+    ],
+  },
+  'GOOGL': {
+    name: 'Alphabet Inc. (Google)', exchange: 'NASDAQ', sector: 'Technology', currency: 'USD',
+    price: 172.36, change: +1.28, changePct: +0.75,
+    week52H: 207.05, week52L: 140.53,
+    mktCap: '$2.11T', mktCapSub: 'Mega Cap',
+    pe: 22.4, peSub: 'Sect avg: 28.4x',
+    divYield: '0.50%', divSub: '$0.21/qtr',
+    beta: 1.05, betaSub: 'Market-like',
+    verdict: 'BUY', verdictClass: 'buy',
+    summary: 'Alphabet trades at the cheapest valuation among mega-cap tech at 22x earnings — a compelling entry point given Gemini AI monetisation is still early, YouTube continues to take TV ad share, and Google Cloud is growing at 28% with expanding margins. Regulatory overhang is a known risk but priced in.',
+    targetPrice: '$210.00', upside: '+21.8% upside',
+    factors: [
+      { label: 'Business Quality', score: 9.2, color: '#00d4aa' },
+      { label: 'Growth Outlook', score: 8.0, color: '#00d4aa' },
+      { label: 'Valuation', score: 8.5, color: '#00d4aa' },
+      { label: 'Financial Health', score: 9.3, color: '#00d4aa' },
+      { label: 'Market Position', score: 9.4, color: '#00d4aa' },
+    ],
+    riskLevel: 2, riskLabel: 'LOW-MEDIUM RISK',
+    risks: ['DOJ antitrust ruling on Search default distribution', 'AI Overviews cannibalising search query volume', 'AI startups (Perplexity, ChatGPT) disrupting search'],
+    catalysts: ['Gemini AI monetisation across Search/Workspace', 'Google Cloud margin expansion to 20%+', 'YouTube Shorts monetisation parity with TikTok', 'Waymo robotaxi commercialisation'],
+    revenue: '$350.0B', revenueGrowth: '+15%', grossMargin: '57.5%', netMargin: '28.6%',
+    eps: '$7.69', epsGrowth: '+31%', fcf: '$72B', roe: '31.5%',
+    cashDebt: 'Net Cash: $95B', currentRatio: '1.95', debtEquity: '0.09x', interestCov: '55x',
+    revGrowth: '+15%', ebitdaGrowth: '+25%', epsGrowthM: '+31%', fcfGrowth: '+28%',
+    multiples: [
+      { label: 'P/E (TTM)', value: '22.4x', vs: 'Sect: 28.4x', flag: 'positive' },
+      { label: 'Forward P/E', value: '18.8x', vs: 'Sect: 25.1x', flag: 'positive' },
+      { label: 'EV/EBITDA', value: '14.5x', vs: 'Sect: 18.3x', flag: 'positive' },
+      { label: 'P/FCF', value: '29.0x', vs: 'Sect: 26.0x', flag: 'neutral' },
+      { label: 'P/S', value: '6.5x', vs: 'Sect: 5.6x', flag: 'neutral' },
+      { label: 'PEG Ratio', value: '0.72x', vs: '< 1 = cheap', flag: 'positive' },
+    ],
+    peers: [
+      { ticker: 'GOOGL*', pe: '22.4', ps: '6.5', divYield: '0.5%', growth: '+31%', verdict: 'BUY' },
+      { ticker: 'META', pe: '25.3', ps: '8.7', divYield: '0.4%', growth: '+19%', verdict: 'BUY' },
+      { ticker: 'MSFT', pe: '36.1', ps: '12.8', divYield: '0.7%', growth: '+22%', verdict: 'BUY' },
+      { ticker: 'SNAP', pe: 'N/A', ps: '3.2', divYield: '0.0%', growth: '+14%', verdict: 'SELL' },
+    ],
+    dcf: [
+      { label: 'Bear Case', value: '$140', sub: 'Search disruption' },
+      { label: 'Base Case', value: '$210', sub: 'AI monetisation ramp' },
+      { label: 'Bull Case', value: '$280', sub: 'Cloud + AI dominance' },
+    ],
+    analystBuy: 40, analystHold: 6, analystSell: 1,
+    avgTarget: '$205.00', highTarget: '$260.00', lowTarget: '$155.00',
+    news: [
+      { headline: 'Alphabet Q1 earnings beat: EPS $2.81 vs $2.01 est; first ever dividend announced', time: '3 days ago', sentiment: 'pos' },
+      { headline: 'Google Cloud grows 28% YoY, crossing $12B quarterly revenue milestone', time: '5 days ago', sentiment: 'pos' },
+      { headline: 'DOJ proposes Google divest Chrome browser — extreme outcome seen as unlikely by analysts', time: '1 week ago', sentiment: 'neg' },
+      { headline: 'Waymo expanding to new cities; Alphabet autonomous vehicle unit seen as trillion-dollar option', time: '2 weeks ago', sentiment: 'pos' },
+    ],
+    technicals: [
+      { label: 'RSI (14)', value: '52.3', signal: 'Neutral', signalClass: 'neutral' },
+      { label: 'MACD', value: 'Bullish Cross', signal: 'Buy', signalClass: 'positive' },
+      { label: '50D MA', value: '$168.40', signal: 'Above', signalClass: 'positive' },
+      { label: '200D MA', value: '$175.20', signal: 'Below', signalClass: 'negative' },
+    ],
+  },
+  'META': {
+    name: 'Meta Platforms Inc.', exchange: 'NASDAQ', sector: 'Social Media', currency: 'USD',
+    price: 617.45, change: +8.22, changePct: +1.35,
+    week52H: 638.40, week52L: 414.50,
+    mktCap: '$1.56T', mktCapSub: 'Mega Cap',
+    pe: 25.3, peSub: 'Sect avg: 28.4x',
+    divYield: '0.40%', divSub: '$0.50/qtr',
+    beta: 1.28, betaSub: 'Moderate volatility',
+    verdict: 'BUY', verdictClass: 'buy',
+    summary: 'Meta\'s advertising machine is firing on all cylinders, with AI-powered ad targeting driving exceptional ROAS for advertisers. Threads growing rapidly, WhatsApp monetisation is early innings. Reality Labs losses are narrowing. At 25x earnings with 19% EPS growth, Meta offers the best growth-at-reasonable-price story in mega-cap tech.',
+    targetPrice: '$750.00', upside: '+21.5% upside',
+    factors: [
+      { label: 'Business Quality', score: 9.1, color: '#00d4aa' },
+      { label: 'Growth Outlook', score: 8.7, color: '#00d4aa' },
+      { label: 'Valuation', score: 7.8, color: '#00d4aa' },
+      { label: 'Financial Health', score: 9.0, color: '#00d4aa' },
+      { label: 'Market Position', score: 9.3, color: '#00d4aa' },
+    ],
+    riskLevel: 2, riskLabel: 'LOW-MEDIUM RISK',
+    risks: ['Reality Labs cumulative losses now $58B+', 'Regulatory pressure on teens\' social media use', 'AI capex cycle ($60-65B in 2025) a drag on FCF'],
+    catalysts: ['WhatsApp Business monetisation acceleration', 'AI-powered ad relevance driving ARPU uplift', 'Threads reaching 350M+ MAU milestone', 'Llama AI open-source ecosystem moat'],
+    revenue: '$164.5B', revenueGrowth: '+19%', grossMargin: '81.8%', netMargin: '38.3%',
+    eps: '$24.40', epsGrowth: '+37%', fcf: '$52B', roe: '38.2%',
+    cashDebt: 'Net Cash: $58B', currentRatio: '2.70', debtEquity: '0.14x', interestCov: '45x',
+    revGrowth: '+19%', ebitdaGrowth: '+30%', epsGrowthM: '+37%', fcfGrowth: '+25%',
+    multiples: [
+      { label: 'P/E (TTM)', value: '25.3x', vs: 'Sect: 28.4x', flag: 'positive' },
+      { label: 'Forward P/E', value: '21.0x', vs: 'Sect: 25.1x', flag: 'positive' },
+      { label: 'EV/EBITDA', value: '15.8x', vs: 'Sect: 18.3x', flag: 'positive' },
+      { label: 'P/FCF', value: '30.0x', vs: 'Sect: 26.0x', flag: 'neutral' },
+      { label: 'P/S', value: '8.7x', vs: 'Sect: 5.6x', flag: 'neutral' },
+      { label: 'PEG Ratio', value: '0.69x', vs: '< 1 = cheap', flag: 'positive' },
+    ],
+    peers: [
+      { ticker: 'META*', pe: '25.3', ps: '8.7', divYield: '0.4%', growth: '+37%', verdict: 'BUY' },
+      { ticker: 'GOOGL', pe: '22.4', ps: '6.5', divYield: '0.5%', growth: '+31%', verdict: 'BUY' },
+      { ticker: 'SNAP', pe: 'N/A', ps: '3.2', divYield: '0.0%', growth: '+14%', verdict: 'SELL' },
+      { ticker: 'PINS', pe: '28', ps: '5.1', divYield: '0.0%', growth: '+17%', verdict: 'HOLD' },
+    ],
+    dcf: [
+      { label: 'Bear Case', value: '$430', sub: 'Ad market slowdown' },
+      { label: 'Base Case', value: '$750', sub: 'Continued ad dominance' },
+      { label: 'Bull Case', value: '$950', sub: 'WhatsApp + AI unlock' },
+    ],
+    analystBuy: 43, analystHold: 5, analystSell: 0,
+    avgTarget: '$718.00', highTarget: '$935.00', lowTarget: '$500.00',
+    news: [
+      { headline: 'Meta Q1 revenue $42.3B, beats estimates; raises full-year capex to $64-72B for AI infra', time: '2 days ago', sentiment: 'pos' },
+      { headline: 'Meta AI reaches 1 billion users — fastest AI assistant to hit this milestone', time: '4 days ago', sentiment: 'pos' },
+      { headline: 'Advertiser spending on Meta\'s AI-optimised campaigns up 40% YoY', time: '1 week ago', sentiment: 'pos' },
+      { headline: 'EU DMA compliance changes force Instagram feed algorithm adjustments', time: '2 weeks ago', sentiment: 'neg' },
+    ],
+    technicals: [
+      { label: 'RSI (14)', value: '63.4', signal: 'Neutral-High', signalClass: 'neutral' },
+      { label: 'MACD', value: 'Bullish', signal: 'Buy', signalClass: 'positive' },
+      { label: '50D MA', value: '$582.30', signal: 'Above', signalClass: 'positive' },
+      { label: '200D MA', value: '$558.70', signal: 'Above', signalClass: 'positive' },
+    ],
+  },
+  '700.HK': {
+    name: 'Tencent Holdings Ltd', exchange: 'HKEX', sector: 'Technology', currency: 'HKD',
+    price: 524.50, change: +8.50, changePct: +1.65,
+    week52H: 548.00, week52L: 276.60,
+    mktCap: 'HK$5.02T', mktCapSub: 'Mega Cap',
+    pe: 20.1, peSub: 'Sect avg: 22x',
+    divYield: '0.80%', divSub: 'HK$3.40/share',
+    beta: 1.15, betaSub: 'Moderate',
+    verdict: 'BUY', verdictClass: 'buy',
+    summary: 'Tencent is the most undervalued global tech mega-cap, trading at 20x earnings vs US peers at 30x+ with comparable or better growth. WeChat\'s 1.3B MAU creates a structurally unassailable ecosystem. Gaming recovery, Video Accounts monetisation and AI integration across products are near-term catalysts.',
+    targetPrice: 'HK$620', upside: '+18.2% upside',
+    factors: [
+      { label: 'Business Quality', score: 9.0, color: '#00d4aa' },
+      { label: 'Growth Outlook', score: 8.2, color: '#00d4aa' },
+      { label: 'Valuation', score: 8.8, color: '#00d4aa' },
+      { label: 'Financial Health', score: 8.5, color: '#00d4aa' },
+      { label: 'Market Position', score: 9.5, color: '#00d4aa' },
+    ],
+    riskLevel: 3, riskLabel: 'MEDIUM RISK',
+    risks: ['China regulatory risk (gaming, fintech, antitrust)', 'US-China geopolitical tensions', 'VIE structure risk', 'Gaming approval pipeline uncertainty'],
+    catalysts: ['Video Accounts (Weixin Channels) ad monetisation', 'Mini Program ecosystem expansion', 'AI model (Hunyuan) integration in products', 'Portfolio investments (Meituan, PDD) re-rating'],
+    revenue: 'RMB¥659.4B', revenueGrowth: '+8%', grossMargin: '53.0%', netMargin: '31.0%',
+    eps: 'HK$20.89', epsGrowth: '+41%', fcf: 'RMB¥178B', roe: '21.5%',
+    cashDebt: 'Net Cash: RMB¥352B', currentRatio: '1.48', debtEquity: '0.42x', interestCov: '20x',
+    revGrowth: '+8%', ebitdaGrowth: '+15%', epsGrowthM: '+41%', fcfGrowth: '+30%',
+    multiples: [
+      { label: 'P/E (TTM)', value: '20.1x', vs: 'HK Tech: 22x', flag: 'positive' },
+      { label: 'Forward P/E', value: '16.8x', vs: 'US Peers: 30x+', flag: 'positive' },
+      { label: 'EV/EBITDA', value: '12.5x', vs: 'Global: 20x', flag: 'positive' },
+      { label: 'P/FCF', value: '22.0x', vs: 'Reasonable', flag: 'positive' },
+      { label: 'P/S', value: '7.0x', vs: 'HK mkt avg: 3x', flag: 'neutral' },
+      { label: 'PEG Ratio', value: '0.49x', vs: '< 1 = cheap', flag: 'positive' },
+    ],
+    peers: [
+      { ticker: '700.HK*', pe: '20.1', ps: '7.0', divYield: '0.8%', growth: '+41%', verdict: 'BUY' },
+      { ticker: '9988.HK', pe: '25', ps: '2.8', divYield: '0.0%', growth: '+8%', verdict: 'BUY' },
+      { ticker: 'BIDU', pe: '12', ps: '1.8', divYield: '0.0%', growth: '+3%', verdict: 'HOLD' },
+      { ticker: 'NTES', pe: '18', ps: '4.2', divYield: '2.5%', growth: '+12%', verdict: 'HOLD' },
+    ],
+    dcf: [
+      { label: 'Bear Case', value: 'HK$380', sub: 'Regulatory crackdown' },
+      { label: 'Base Case', value: 'HK$620', sub: 'Recovery continues' },
+      { label: 'Bull Case', value: 'HK$800', sub: 'AI + WeChat ad ramp' },
+    ],
+    analystBuy: 35, analystHold: 6, analystSell: 1,
+    avgTarget: 'HK$610', highTarget: 'HK$750', lowTarget: 'HK$380',
+    news: [
+      { headline: 'Tencent Q1 net profit surges 22% YoY to RMB47.9B; gaming revenue rebounds strongly', time: '2 days ago', sentiment: 'pos' },
+      { headline: 'WeChat Video Accounts ad revenue on track for RMB15B in 2025 — ahead of schedule', time: '5 days ago', sentiment: 'pos' },
+      { headline: 'Tencent announces HK$80B buyback for 2025 — signals management confidence', time: '1 week ago', sentiment: 'pos' },
+      { headline: 'China gaming regulator approves 105 new titles in May — positive for Tencent pipeline', time: '2 weeks ago', sentiment: 'pos' },
+    ],
+    technicals: [
+      { label: 'RSI (14)', value: '60.1', signal: 'Neutral', signalClass: 'neutral' },
+      { label: 'MACD', value: 'Bullish', signal: 'Buy', signalClass: 'positive' },
+      { label: '50D MA', value: 'HK$498', signal: 'Above', signalClass: 'positive' },
+      { label: '200D MA', value: 'HK$410', signal: 'Above', signalClass: 'positive' },
+    ],
+  }
+};
+
+function quickLoad(ticker) {
+  document.getElementById('tickerInput').value = ticker;
+  analyzeStock();
+}
+
+function analyzeStock() {
+  const input = document.getElementById('tickerInput').value.trim().toUpperCase();
+  if (!input) return;
+
+  const data = stockDB[input] || generateGenericData(input);
+  
+  document.getElementById('loading').classList.add('active');
+  document.getElementById('dashboard').classList.remove('active');
+
+  setTimeout(() => {
+    document.getElementById('loading').classList.remove('active');
+    renderDashboard(data);
+    document.getElementById('dashboard').classList.add('active');
+    // Reset to overview tab
+    switchTab('overview');
+  }, 900);
+}
+
+function generateGenericData(ticker) {
+  const price = (Math.random() * 200 + 20).toFixed(2);
+  const change = (Math.random() * 6 - 3).toFixed(2);
+  const pct = (change / price * 100).toFixed(2);
+  return {
+    name: ticker + ' Corporation', exchange: 'NYSE', sector: 'Diversified', currency: 'USD',
+    price: parseFloat(price), change: parseFloat(change), changePct: parseFloat(pct),
+    week52H: (price * 1.35).toFixed(2), week52L: (price * 0.65).toFixed(2),
+    mktCap: '$' + (Math.random() * 50 + 5).toFixed(1) + 'B', mktCapSub: 'Mid Cap',
+    pe: (Math.random() * 30 + 10).toFixed(1), peSub: 'Sect avg: 18x',
+    divYield: (Math.random() * 3 + 0.5).toFixed(2) + '%', divSub: 'Quarterly',
+    beta: (Math.random() * 1.5 + 0.5).toFixed(2), betaSub: 'Market-like',
+    verdict: 'HOLD', verdictClass: 'hold',
+    summary: `${ticker} is under coverage review. This analysis is generated as a placeholder — please enter a supported ticker (AAPL, MSFT, NVDA, DBS, TSLA, GOOGL, META, 700.HK) for full analysis with real data and investment insights.`,
+    targetPrice: '$' + (price * 1.1).toFixed(2), upside: '+10.0% upside',
+    factors: [
+      { label: 'Business Quality', score: 6.5, color: '#f59e0b' },
+      { label: 'Growth Outlook', score: 6.0, color: '#f59e0b' },
+      { label: 'Valuation', score: 6.5, color: '#f59e0b' },
+      { label: 'Financial Health', score: 7.0, color: '#00d4aa' },
+      { label: 'Market Position', score: 6.0, color: '#f59e0b' },
+    ],
+    riskLevel: 3, riskLabel: 'MEDIUM RISK',
+    risks: ['Limited data available for full risk analysis', 'Market and sector risks apply', 'Company-specific risks require deeper research'],
+    catalysts: ['Earnings beats vs expectations', 'Sector tailwinds', 'Management execution on stated targets'],
+    revenue: '—', revenueGrowth: '—', grossMargin: '—', netMargin: '—',
+    eps: '—', epsGrowth: '—', fcf: '—', roe: '—',
+    cashDebt: '—', currentRatio: '—', debtEquity: '—', interestCov: '—',
+    revGrowth: '—', ebitdaGrowth: '—', epsGrowthM: '—', fcfGrowth: '—',
+    multiples: [
+      { label: 'P/E (TTM)', value: '—', vs: '—', flag: 'neutral' },
+      { label: 'Forward P/E', value: '—', vs: '—', flag: 'neutral' },
+      { label: 'EV/EBITDA', value: '—', vs: '—', flag: 'neutral' },
+      { label: 'P/FCF', value: '—', vs: '—', flag: 'neutral' },
+    ],
+    peers: [{ ticker: ticker + '*', pe: '—', ps: '—', divYield: '—', growth: '—', verdict: 'HOLD' }],
+    dcf: [
+      { label: 'Bear Case', value: '—', sub: 'Insufficient data' },
+      { label: 'Base Case', value: '$' + (price * 1.1).toFixed(2), sub: 'Market consensus' },
+      { label: 'Bull Case', value: '—', sub: 'Insufficient data' },
+    ],
+    analystBuy: 5, analystHold: 8, analystSell: 2,
+    avgTarget: '$' + (price * 1.08).toFixed(2), highTarget: '$' + (price * 1.25).toFixed(2), lowTarget: '$' + (price * 0.80).toFixed(2),
+    news: [
+      { headline: 'No recent news indexed for this ticker. Please check financial news sources.', time: 'N/A', sentiment: 'neu' },
+    ],
+    technicals: [
+      { label: 'RSI (14)', value: '—', signal: 'N/A', signalClass: 'neutral' },
+      { label: 'MACD', value: '—', signal: 'N/A', signalClass: 'neutral' },
+      { label: '50D MA', value: '—', signal: 'N/A', signalClass: 'neutral' },
+      { label: '200D MA', value: '—', signal: 'N/A', signalClass: 'neutral' },
+    ],
+  };
+}
+
+function renderDashboard(d) {
+  // Stock header
+  document.getElementById('stockName').textContent = d.name;
+  document.getElementById('stockTicker').textContent = d.exchange + ':' + (Object.keys(stockDB).find(k => stockDB[k] === d) || d.name.slice(0,4));
+  document.getElementById('stockExchange').textContent = d.exchange;
+  document.getElementById('stockSector').textContent = d.sector;
+  
+  const cur = d.currency === 'USD' ? '$' : d.currency === 'SGD' ? 'S$' : d.currency === 'HKD' ? 'HK$' : '';
+  document.getElementById('currentPrice').textContent = cur + d.price.toLocaleString();
+  
+  const changeEl = document.getElementById('priceChange');
+  const isUp = d.change >= 0;
+  changeEl.textContent = (isUp ? '+' : '') + d.change + ' (' + (isUp ? '+' : '') + d.changePct + '%) today';
+  changeEl.className = 'price-change ' + (isUp ? 'up' : 'down');
+  
+  document.getElementById('priceRange').textContent = '52W: ' + d.week52L + ' / ' + d.week52H;
+
+  // Verdict
+  const verdictCard = document.getElementById('verdictCard');
+  verdictCard.className = 'verdict-card ' + d.verdictClass;
+  const verdictRating = document.getElementById('verdictRating');
+  verdictRating.textContent = d.verdict;
+  verdictRating.className = 'verdict-rating ' + d.verdictClass;
+  document.getElementById('verdictSummary').textContent = d.summary;
+  document.getElementById('targetPrice').textContent = d.targetPrice;
+  document.getElementById('upsideText').textContent = d.upside;
+
+  // Mini stats
+  document.getElementById('mktCap').textContent = d.mktCap;
+  document.getElementById('mktCapSub').textContent = d.mktCapSub;
+  document.getElementById('peRatio').textContent = d.pe + 'x';
+  document.getElementById('peSub').textContent = d.peSub;
+  document.getElementById('divYield').textContent = d.divYield;
+  document.getElementById('divSub').textContent = d.divSub;
+  document.getElementById('betaVal').textContent = d.beta;
+  document.getElementById('betaSub').textContent = d.betaSub;
+
+  // Price chart (candles)
+  renderCandleChart(d);
+
+  // Factor scores
+  const factorEl = document.getElementById('factorScores');
+  factorEl.innerHTML = d.factors.map(f => `
+    <div class="score-row">
+      <div class="score-label">${f.label}</div>
+      <div class="score-bar-bg">
+        <div class="score-bar-fill" style="width:${f.score * 10}%;background:${f.color};"></div>
+      </div>
+      <div class="score-num">${f.score}</div>
+    </div>
+  `).join('');
+
+  // Risk
+  const riskColors = ['', 'active-low', 'active-low', 'active-med', 'active-high', 'active-high'];
+  document.getElementById('riskContent').innerHTML = `
+    <div style="margin-bottom:12px;">
+      <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:0.08em;margin-bottom:8px;">${d.riskLabel}</div>
+      <div class="risk-meter">${[1,2,3,4,5].map(i => `<div class="risk-block ${i <= d.riskLevel ? riskColors[d.riskLevel] : ''}"></div>`).join('')}</div>
+    </div>
+    ${d.risks.map(r => `<div class="metric-row"><div class="metric-label" style="color:#94a3b8;">⚠ ${r}</div></div>`).join('')}
+  `;
+
+  // Catalysts
+  document.getElementById('catalystsContent').innerHTML = d.catalysts.map(c => `
+    <div class="metric-row"><div class="metric-label" style="color:#94a3b8;">✦ ${c}</div></div>
+  `).join('');
+
+  // Financials
+  document.getElementById('incomeContent').innerHTML = [
+    ['Revenue', d.revenue, ''], ['Revenue Growth', d.revenueGrowth, 'positive'],
+    ['Gross Margin', d.grossMargin, 'positive'], ['Net Margin', d.netMargin, 'positive'],
+    ['EPS', d.eps, ''], ['EPS Growth', d.epsGrowth, d.epsGrowth && d.epsGrowth.startsWith('-') ? 'negative' : 'positive'],
+    ['FCF', d.fcf, ''], ['ROE', d.roe, 'positive'],
+  ].map(([l, v, cls]) => `<div class="metric-row"><span class="metric-label">${l}</span><span class="metric-value ${cls}">${v}</span></div>`).join('');
+
+  document.getElementById('balanceContent').innerHTML = [
+    ['Cash / Debt', d.cashDebt, ''], ['Current Ratio', d.currentRatio, ''],
+    ['Debt / Equity', d.debtEquity, ''], ['Interest Coverage', d.interestCov, ''],
+  ].map(([l, v]) => `<div class="metric-row"><span class="metric-label">${l}</span><span class="metric-value">${v}</span></div>`).join('');
+
+  document.getElementById('growthContent').innerHTML = [
+    ['Revenue Growth', d.revGrowth], ['EBITDA Growth', d.ebitdaGrowth],
+    ['EPS Growth', d.epsGrowthM], ['FCF Growth', d.fcfGrowth],
+  ].map(([l, v]) => `<div class="mini-stat"><div class="mini-stat-label">${l}</div><div class="mini-stat-value" style="font-size:18px;color:${v && v.startsWith('-') ? 'var(--danger)' : 'var(--accent)'};">${v}</div></div>`).join('');
+
+  // Valuation multiples
+  document.getElementById('multiples').innerHTML = d.multiples.map(m => `
+    <div class="metric-row">
+      <span class="metric-label">${m.label}</span>
+      <div style="text-align:right;">
+        <div class="metric-value ${m.flag === 'positive' ? 'positive' : m.flag === 'negative' ? 'negative' : ''}">${m.value}</div>
+        <div style="font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;">${m.vs}</div>
+      </div>
+    </div>
+  `).join('');
+
+  // Peer table
+  const peerTable = document.getElementById('peerTable');
+  peerTable.innerHTML = `
+    <thead><tr>
+      <th>Ticker</th><th>P/E</th><th>P/S</th><th>Div Yield</th><th>EPS Growth</th><th>Verdict</th>
+    </tr></thead>
+    <tbody>
+      ${d.peers.map(p => `<tr class="${p.ticker.endsWith('*') ? 'highlight' : ''}">
+        <td>${p.ticker}</td><td>${p.pe}</td><td>${p.ps}</td><td>${p.divYield}</td><td>${p.growth}</td>
+        <td style="color:${p.verdict === 'BUY' ? 'var(--accent)' : p.verdict === 'SELL' ? 'var(--danger)' : 'var(--warn)'};">${p.verdict}</td>
+      </tr>`).join('')}
+    </tbody>
+  `;
+
+  // DCF
+  document.getElementById('dcfContent').innerHTML = d.dcf.map(item => `
+    <div class="mini-stat" style="text-align:center;">
+      <div class="mini-stat-label">${item.label}</div>
+      <div class="mini-stat-value" style="font-size:24px;color:var(--gold);">${item.value}</div>
+      <div class="mini-stat-sub">${item.sub}</div>
+    </div>
+  `).join('');
+
+  // Analyst ratings
+  const total = d.analystBuy + d.analystHold + d.analystSell;
+  document.getElementById('analystContent').innerHTML = `
+    <div style="margin-bottom:16px;">
+      ${[
+        { label: 'Buy', count: d.analystBuy, color: 'var(--accent)' },
+        { label: 'Hold', count: d.analystHold, color: 'var(--warn)' },
+        { label: 'Sell', count: d.analystSell, color: 'var(--danger)' },
+      ].map(r => `
+        <div class="rating-bar">
+          <div class="rating-label-sm" style="color:${r.color};">${r.label}</div>
+          <div class="rating-bar-bg"><div style="width:${(r.count/total*100).toFixed(0)}%;height:100%;background:${r.color};border-radius:3px;"></div></div>
+          <div class="rating-count">${r.count}</div>
+        </div>
+      `).join('')}
+    </div>
+    <div class="metric-row"><span class="metric-label">Avg Target</span><span class="metric-value positive">${d.avgTarget}</span></div>
+    <div class="metric-row"><span class="metric-label">High Target</span><span class="metric-value">${d.highTarget}</span></div>
+    <div class="metric-row"><span class="metric-label">Low Target</span><span class="metric-value">${d.lowTarget}</span></div>
+    <div class="metric-row"><span class="metric-label">Coverage</span><span class="metric-value">${total} analysts</span></div>
+  `;
+
+  // News
+  document.getElementById('newsContent').innerHTML = d.news.map(n => `
+    <div class="news-item">
+      <div class="news-headline">${n.headline}</div>
+      <div class="news-meta">
+        <span>${n.time}</span>
+        <span class="news-sentiment ${n.sentiment}">${n.sentiment === 'pos' ? 'POSITIVE' : n.sentiment === 'neg' ? 'NEGATIVE' : 'NEUTRAL'}</span>
+      </div>
+    </div>
+  `).join('');
+
+  // Technicals
+  document.getElementById('technicalContent').innerHTML = d.technicals.map(t => `
+    <div class="mini-stat">
+      <div class="mini-stat-label">${t.label}</div>
+      <div class="mini-stat-value" style="font-size:15px;">${t.value}</div>
+      <div class="mini-stat-sub" style="color:${t.signalClass === 'positive' ? 'var(--accent)' : t.signalClass === 'negative' ? 'var(--danger)' : 'var(--warn)'};">${t.signal}</div>
+    </div>
+  `).join('');
+}
+
+function renderCandleChart(d) {
+  const container = document.getElementById('priceChart');
+  container.innerHTML = '';
+  
+  // Generate 30 candles
+  let price = d.price * 0.88;
+  const candles = [];
+  for (let i = 0; i < 30; i++) {
+    const open = price;
+    const move = (Math.random() - 0.44) * price * 0.025;
+    const close = price + move;
+    const high = Math.max(open, close) + Math.random() * price * 0.01;
+    const low = Math.min(open, close) - Math.random() * price * 0.01;
+    candles.push({ open, close, high, low });
+    price = close;
+  }
+  
+  const allHigh = Math.max(...candles.map(c => c.high));
+  const allLow = Math.min(...candles.map(c => c.low));
+  const range = allHigh - allLow;
+  const chartH = 160;
+  
+  candles.forEach(c => {
+    const wrap = document.createElement('div');
+    wrap.className = 'candle-wrap';
+    wrap.style.height = chartH + 'px';
+    
+    const isUp = c.close >= c.open;
+    const bodyTop = chartH - ((Math.max(c.open, c.close) - allLow) / range * chartH);
+    const bodyH = Math.max(2, ((Math.abs(c.close - c.open)) / range * chartH));
+    const wickTop = chartH - ((c.high - allLow) / range * chartH);
+    const wickH = (c.high - c.low) / range * chartH;
+    
+    const wick = document.createElement('div');
+    wick.className = 'candle-wick';
+    wick.style.top = wickTop + 'px';
+    wick.style.height = wickH + 'px';
+    wick.style.background = isUp ? '#00d4aa44' : '#ef444444';
+    
+    const body = document.createElement('div');
+    body.className = 'candle-body ' + (isUp ? 'up' : 'down');
+    body.style.top = bodyTop + 'px';
+    body.style.height = bodyH + 'px';
+    
+    wrap.appendChild(wick);
+    wrap.appendChild(body);
+    container.appendChild(wrap);
+  });
+}
+
+function switchTab(tabId) {
+  document.querySelectorAll('.tab').forEach((t, i) => {
+    const tabs = ['overview', 'financials', 'valuation', 'sentiment'];
+    t.classList.toggle('active', tabs[i] === tabId);
+  });
+  document.querySelectorAll('.tab-content').forEach(c => {
+    c.classList.toggle('active', c.id === 'tab-' + tabId);
+  });
+}
+
+function clearDashboard() {
+  document.getElementById('tickerInput').value = '';
+  document.getElementById('dashboard').classList.remove('active');
+}
+
+// Enter key
+document.getElementById('tickerInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') analyzeStock();
+});
+</script>
+</body>
+</html>
